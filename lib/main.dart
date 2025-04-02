@@ -150,7 +150,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     final box = Hive.box<Task>(taskBoxName);
@@ -213,12 +220,16 @@ class HomeScreen extends StatelessWidget {
                         color: Theme.of(context).colorScheme.onPrimary,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 20,
                           ),
                         ],
                       ),
                       child: TextField(
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                        controller: controller,
                         decoration: InputDecoration(
                           prefixIcon: Icon(
                             CupertinoIcons.search,
@@ -239,10 +250,21 @@ class HomeScreen extends StatelessWidget {
               child: ValueListenableBuilder<Box<Task>>(
                 valueListenable: box.listenable(),
                 builder: (context, box, child) {
-                  if (box.isNotEmpty) {
+                  final items;
+                  if (controller.text.isEmpty) {
+                    items = box.values.toList();
+                  } else {
+                    items =
+                        box.values
+                            .where(
+                              (task) => task.name.contains(controller.text),
+                            )
+                            .toList();
+                  }
+                  if (items.isNotEmpty) {
                     return ListView.builder(
                       padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
-                      itemCount: box.values.length + 1,
+                      itemCount: items.length + 1,
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           return Row(
@@ -285,7 +307,7 @@ class HomeScreen extends StatelessWidget {
                             ],
                           );
                         } else {
-                          final Task task = box.values.toList()[index - 1];
+                          final Task task = items[index - 1];
                           return TaskItem(task: task);
                         }
                       },
