@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:to_do/data.dart';
@@ -212,7 +213,7 @@ class HomeScreen extends StatelessWidget {
                         color: Theme.of(context).colorScheme.onPrimary,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: Colors.black.withOpacity(0.1),
                             blurRadius: 20,
                           ),
                         ],
@@ -238,53 +239,60 @@ class HomeScreen extends StatelessWidget {
               child: ValueListenableBuilder<Box<Task>>(
                 valueListenable: box.listenable(),
                 builder: (context, box, child) {
-                  return ListView.builder(
-                    padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    itemCount: box.values.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Today',
-                                  style: Theme.of(context).textTheme.titleSmall,
-                                ),
-                                Container(
-                                  width: 50,
-                                  height: 3,
-                                  margin: EdgeInsets.only(top: 4),
-                                  decoration: BoxDecoration(
-                                    color: primaryColor,
-                                    borderRadius: BorderRadius.circular(1.5),
+                  if (box.isNotEmpty) {
+                    return ListView.builder(
+                      padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
+                      itemCount: box.values.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Today',
+                                    style:
+                                        Theme.of(context).textTheme.titleSmall,
                                   ),
-                                ),
-                              ],
-                            ),
-                            MaterialButton(
-                              color: Color(0xffEAEFF5),
-                              textColor: secondaryTextColor,
-                              elevation: 0,
-                              onPressed: () {},
-                              child: Row(
-                                children: const [
-                                  Text('Delete All'),
-                                  SizedBox(width: 4),
-                                  Icon(CupertinoIcons.delete_solid, size: 16),
+                                  Container(
+                                    width: 50,
+                                    height: 3,
+                                    margin: EdgeInsets.only(top: 4),
+                                    decoration: BoxDecoration(
+                                      color: primaryColor,
+                                      borderRadius: BorderRadius.circular(1.5),
+                                    ),
+                                  ),
                                 ],
                               ),
-                            ),
-                          ],
-                        );
-                      } else {
-                        final Task task = box.values.toList()[index - 1];
-                        return TaskItem(task: task);
-                      }
-                    },
-                  );
+                              MaterialButton(
+                                color: Color(0xffEAEFF5),
+                                textColor: secondaryTextColor,
+                                elevation: 0,
+                                onPressed: () {
+                                  box.clear();
+                                },
+                                child: Row(
+                                  children: const [
+                                    Text('Delete All'),
+                                    SizedBox(width: 4),
+                                    Icon(CupertinoIcons.delete_solid, size: 16),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          final Task task = box.values.toList()[index - 1];
+                          return TaskItem(task: task);
+                        }
+                      },
+                    );
+                  } else {
+                    return const EmptyState();
+                  }
                 },
               ),
             ),
@@ -329,6 +337,9 @@ class _TaskItemState extends State<TaskItem> {
             builder: (context) => EditTaskScreen(task: widget.task),
           ),
         );
+      },
+      onLongPress: () {
+        widget.task.delete();
       },
       child: Container(
         height: TaskItem.height,
@@ -416,6 +427,22 @@ class MyCheckBox extends StatelessWidget {
                 )
                 : null,
       ),
+    );
+  }
+}
+
+class EmptyState extends StatelessWidget {
+  const EmptyState({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SvgPicture.asset('assets/empty_state.svg', width: 120),
+        SizedBox(height: 16),
+        Text('Your Task list is empty'),
+      ],
     );
   }
 }
